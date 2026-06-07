@@ -1,0 +1,1 @@
+ALTER TABLE "communities" ADD COLUMN "image" varchar(100) NOT NULL;

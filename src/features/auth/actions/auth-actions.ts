@@ -1,0 +1,88 @@
+"use server";
+
+import { rateLimit } from "@/src/lib/limiter";
+import {
+  ForgotPasswordInput,
+  ForgotPasswordSchema,
+  SetPasswordInput,
+  SetPasswordSchema,
+  SignInInput,
+  SignInSchema,
+  SignUpInput,
+  SignUpSchema,
+} from "../schemas/authSchema";
+import { authService } from "../services/AuthService";
+import { getClientIp } from "@/src/shared/utils/ip";
+import { getMinutesDiffFromNow } from "@/src/shared/utils/date";
+
+export async function signUpAction(input: SignUpInput) {
+  const data = SignUpSchema.safeParse(input);
+
+  if (!data.success) {
+    return {
+      error: "Hubo un error",
+      success: "",
+    };
+  }
+  const response = await authService.register(data.data);
+  return response;
+}
+
+export async function signInAction(input: SignInInput) {
+  const ip = await getClientIp();
+  const { success, reset } = await rateLimit.limit(ip);
+  if (!success) {
+    return {
+      success: "",
+      error: `Límite alacanzado. Intenta de nuevo en ${getMinutesDiffFromNow(reset)} Minutos`,
+    };
+  }
+  const data = SignInSchema.safeParse(input);
+
+  if (!data.success) {
+    return {
+      error: "Hubo un error",
+      success: "",
+    };
+  }
+  const response = await authService.login(data.data);
+  return response;
+}
+
+export async function forgotPasswordAction(input: ForgotPasswordInput) {
+  const ip = await getClientIp();
+  const { success, reset } = await rateLimit.limit(ip);
+  if (!success) {
+    return {
+      success: "",
+      error: `Límite alacanzado. Intenta de nuevo en ${getMinutesDiffFromNow(reset)} Minutos`,
+    };
+  }
+  const data = ForgotPasswordSchema.safeParse(input);
+  if (!data.success) {
+    return {
+      error: "Hubo un error",
+      success: "",
+    };
+  }
+
+  const response = await authService.resetPasswordReset(data.data);
+  return response;
+}
+
+export async function setPasswordAction(
+  input: SetPasswordInput,
+  token: string,
+) {
+  const data = SetPasswordSchema.safeParse(input);
+  if (!data.success) {
+    return {
+      error: "Hubo un error",
+      success: "",
+    };
+  }
+
+  const response = await authService.confirmPasswordReset(data.data, token);
+  return response;
+}
+
