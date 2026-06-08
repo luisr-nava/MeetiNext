@@ -30,3 +30,10 @@ export type CommunityWithPermissions = {
   permissions: CommunityPermissions;
 };
 
+export type CommunityWithMembersCount = Omit<
+  SelectCommunity,
+  "createdBy" | "createdAt"
+> & {
+  membersCount: string;
+};
+

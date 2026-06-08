@@ -1,5 +1,6 @@
 import { auth } from "@/src/lib/auth";
 import {
+  ChangePasswordInput,
   ForgotPasswordInput,
   SetPasswordInput,
   SignInInput,
@@ -8,6 +9,7 @@ import {
 import { authRepository, IAuthRepository } from "./AuthRepository";
 import { headers } from "next/headers";
 import { APIError, success } from "better-auth";
+import { checkPassword } from "@/src/shared/utils/auth";
 
 class AuthService {
   constructor(private authRepository: IAuthRepository) {}
@@ -174,6 +176,30 @@ class AuthService {
     return {
       error: "",
       success: "",
+    };
+  }
+  async changePassword(input: ChangePasswordInput) {
+    const { newPassword, currentPassword, revokeOtherSessions } = input;
+
+    const isValid = await checkPassword(currentPassword);
+
+    if (!isValid) {
+      return {
+        error: "El password actual es incorrecto",
+        success: "",
+      };
+    }
+    await auth.api.changePassword({
+      body: {
+        currentPassword,
+        newPassword,
+      },
+      headers: await headers(),
+    });
+
+    return {
+      error: "",
+      success: "El password se actualizo correctamente",
     };
   }
 }

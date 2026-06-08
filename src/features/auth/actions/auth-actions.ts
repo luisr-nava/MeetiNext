@@ -2,6 +2,8 @@
 
 import { rateLimit } from "@/src/lib/limiter";
 import {
+  ChangePasswordInput,
+  ChangePasswordSchema,
   ForgotPasswordInput,
   ForgotPasswordSchema,
   SetPasswordInput,
@@ -14,6 +16,7 @@ import {
 import { authService } from "../services/AuthService";
 import { getClientIp } from "@/src/shared/utils/ip";
 import { getMinutesDiffFromNow } from "@/src/shared/utils/date";
+import { requireAuth } from "@/src/lib/auth-server";
 
 export async function signUpAction(input: SignUpInput) {
   const data = SignUpSchema.safeParse(input);
@@ -84,5 +87,18 @@ export async function setPasswordAction(
 
   const response = await authService.confirmPasswordReset(data.data, token);
   return response;
+}
+
+export async function changePasswordAction(input: ChangePasswordInput) {
+  const { session } = await requireAuth();
+  const data = ChangePasswordSchema.safeParse(input);
+  if (!session || !data.success) {
+    return {
+      error: "Hubo un error",
+      success: "",
+    };
+  }
+  const result = await authService.changePassword(data.data);
+  return result;
 }
 

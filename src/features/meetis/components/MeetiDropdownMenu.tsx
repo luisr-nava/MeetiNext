@@ -3,12 +3,14 @@ import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { EllipsisVerticalIcon } from "@heroicons/react/24/outline";
 import { SelectMeeti } from "../types/meeti.type";
 import Link from "next/link";
+import { useMeetiStore } from "../stores/meeti.store";
 
 type Props = {
   meeti: SelectMeeti;
 };
 
 export default function MeetiDropdownMenu({ meeti }: Props) {
+  const { setMeeti, setOpen } = useMeetiStore();
   return (
     <Menu as="div" className="relative flex-none">
       <MenuButton className="relative block text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
@@ -43,6 +45,10 @@ export default function MeetiDropdownMenu({ meeti }: Props) {
         </MenuItem>
         <MenuItem>
           <button
+            onClick={() => {
+              setMeeti(meeti);
+              setOpen(true);
+            }}
             type="button"
             className="block px-3 py-1 text-sm/6 text-red-600 data-focus:bg-gray-50 data-focus:outline-hidden dark:text-white dark:data-focus:bg-white/5 cursor-pointer">
             Eliminar<span className="sr-only">, {meeti.title}</span>

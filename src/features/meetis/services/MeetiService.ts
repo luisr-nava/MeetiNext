@@ -12,6 +12,7 @@ import {
   meetiAttendeesRepository,
 } from "./MeetiAttendeesRepository";
 import { MeetiAttendeePolicy } from "../policy/MeetiAttendeesPolicy";
+import { deleteUTPFiles } from "@/src/lib/uploadthing-server";
 
 class MeetiService {
   constructor(
@@ -52,6 +53,9 @@ class MeetiService {
       }),
     );
     return enriched;
+  }
+  async getUpcomming() {
+    return await meetiRepository.findUpcoming();
   }
   async getMeetiById(meetiId: string) {
     const meeti = await this.meetiRepository.findById(meetiId);
@@ -138,6 +142,27 @@ class MeetiService {
     return {
       meeti,
       attendees,
+    };
+  }
+  async getMeetisByCategory(categoryId: string) {
+    return await meetiRepository.findByCategory(categoryId);
+  }
+
+  async deleteMeeti(meetiId: string, user: User) {
+    // Obtener el Meeti
+    const meeti = await this.getMeetiById(meetiId);
+
+    // revisar permisos
+    if (!MeetiPolicy.canDelete(user, meeti)) {
+      throw new Error("No tienes permisos para eliminar");
+    }
+    // Eliminar
+    await meetiRepository.delete(meetiId);
+    await deleteUTPFiles(meeti.image);
+
+    return {
+      error: "",
+      success: "Meeti eliminado correctamente",
     };
   }
 }

@@ -1,7 +1,11 @@
 import { db } from "@/src/db";
-import { InsertCommunity, SelectCommunity } from "../types/community.types";
-import { community } from "@/src/db/schema";
-import { eq } from "drizzle-orm";
+import {
+  CommunityWithMembersCount,
+  InsertCommunity,
+  SelectCommunity,
+} from "../types/community.types";
+import { community, communityMembers } from "@/src/db/schema";
+import { desc, eq, sql } from "drizzle-orm";
 import { CommunityInput } from "../schema/communitySchema";
 
 export interface ICommunityRepository {
@@ -10,6 +14,7 @@ export interface ICommunityRepository {
   findById(communityId: string): Promise<SelectCommunity | undefined>;
   upadate(data: CommunityInput, communityId: string): Promise<void>;
   delete(communityId: string): Promise<void>;
+  findFeatured(): Promise<CommunityWithMembersCount[]>;
 }
 
 class CommunityRepository implements ICommunityRepository {
@@ -43,6 +48,28 @@ class CommunityRepository implements ICommunityRepository {
   }
   async delete(communityId: string): Promise<void> {
     await db.delete(community).where(eq(community.id, communityId));
+  }
+
+  async findFeatured(): Promise<CommunityWithMembersCount[]> {
+    const membersCount = sql<string>`(
+      SELECT COUNT(*)
+      FROM ${communityMembers}
+      WHERE ${communityMembers.communityId} = ${community.id}
+    )`;
+
+    const result = await db
+      .select({
+        id: community.id,
+        name: community.name,
+        membersCount,
+        description: community.description,
+        image: community.image,
+      })
+      .from(community)
+      .orderBy(desc(membersCount))
+      .limit(3);
+
+    return result;
   }
 }
 

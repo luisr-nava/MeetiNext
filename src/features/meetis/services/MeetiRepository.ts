@@ -13,10 +13,13 @@ import { format } from "date-fns";
 export interface IMeetiRepository {
   insert(data: InsertMeeti): Promise<void>;
   findUpcomingByUserId(userId: string): Promise<SelectMeeti[]>;
+  findUpcoming(): Promise<SelectMeeti[]>;
   findById(id: string): Promise<SelectMeeti | null>;
   update(data: InsertMeeti, meetiId: string): Promise<void>;
   findFullById(id: string): Promise<FullMeeti | null>;
   findUpcomimgByCommunity(communityId: string): Promise<SelectMeeti[]>;
+  findByCategory(categoryId: string): Promise<SelectMeeti[]>;
+  delete(meetiId: string): Promise<void>;
 }
 class MeetiRepository implements IMeetiRepository {
   async insert(data: InsertMeeti) {
@@ -43,6 +46,29 @@ class MeetiRepository implements IMeetiRepository {
       orderBy: {
         date: "asc",
       },
+    });
+
+    return result;
+  }
+  async findUpcoming() {
+    const now = new Date();
+    const nowDate = now.toISOString().slice(0, 10);
+    const nowTime = now.toTimeString().slice(0, 5);
+
+    const result = await db.query.meeti.findMany({
+      where: {
+        OR: [
+          { date: { gt: nowDate } },
+          {
+            AND: [{ date: { eq: nowDate } }, { time: { gte: nowTime } }],
+          },
+        ],
+      },
+      orderBy: {
+        date: "asc",
+        time: "asc",
+      },
+      limit: 3,
     });
 
     return result;
@@ -115,6 +141,27 @@ class MeetiRepository implements IMeetiRepository {
         date: "asc",
       },
     });
+  }
+  async findByCategory(categoryId: string): Promise<SelectMeeti[]> {
+    const today = format(new Date(), "yyyy-MM-dd");
+
+    const result = await db.query.meeti.findMany({
+      where: {
+        categoryId,
+        date: {
+          gte: today,
+        },
+      },
+      orderBy: {
+        date: "asc",
+      },
+      limit: 10,
+    });
+
+    return result;
+  }
+  async delete(meetiId: string): Promise<void> {
+    await db.delete(meeti).where(eq(meeti.id, meetiId));
   }
 }
 
