@@ -1,6 +1,6 @@
 import { IMeetiRepository, meetiRepository } from "./MeetiRepository";
 import { MeetiInput } from "../schemas/meetiSchema";
-import { User } from "better-auth";
+import { boolean, User } from "better-auth";
 import {
   communityRepository,
   ICommunityRepository,
@@ -164,6 +164,27 @@ class MeetiService {
       error: "",
       success: "Meeti eliminado correctamente",
     };
+  }
+
+  async getMeetiByTopic(query: string) {
+    return await this.meetiRepository.searchByTopic(query);
+  }
+
+  async getVirtualMeetis(query?: string) {
+    return await this.meetiRepository.searchVirtual(query);
+  }
+  async getInPersonMeetis(
+    query?: string,
+    city?: string,
+    country?: string,
+    today?: boolean,
+  ) {
+    return await this.meetiRepository.searchByLocation(
+      query,
+      city,
+      country,
+      today,
+    );
   }
 }
 

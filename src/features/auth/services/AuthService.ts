@@ -197,10 +197,27 @@ class AuthService {
       headers: await headers(),
     });
 
+    if (revokeOtherSessions) {
+      await auth.api.revokeOtherSessions({
+        headers: await headers(),
+      });
+    }
     return {
       error: "",
       success: "El password se actualizo correctamente",
     };
+  }
+
+  async getSessions() {
+    return auth.api.listSessions({
+      headers: await headers(),
+    });
+  }
+
+  async getSession() {
+    return auth.api.getSession({
+      headers: await headers(),
+    });
   }
 }
 

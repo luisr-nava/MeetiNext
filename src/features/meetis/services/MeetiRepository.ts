@@ -20,6 +20,14 @@ export interface IMeetiRepository {
   findUpcomimgByCommunity(communityId: string): Promise<SelectMeeti[]>;
   findByCategory(categoryId: string): Promise<SelectMeeti[]>;
   delete(meetiId: string): Promise<void>;
+  searchByTopic(query: string): Promise<SelectMeeti[]>;
+  searchVirtual(query?: string): Promise<SelectMeeti[]>;
+  searchByLocation(
+    query?: string,
+    city?: string,
+    country?: string,
+    today?: boolean,
+  ): Promise<SelectMeeti[]>;
 }
 class MeetiRepository implements IMeetiRepository {
   async insert(data: InsertMeeti) {
@@ -162,6 +170,94 @@ class MeetiRepository implements IMeetiRepository {
   }
   async delete(meetiId: string): Promise<void> {
     await db.delete(meeti).where(eq(meeti.id, meetiId));
+  }
+  async searchByTopic(query: string): Promise<SelectMeeti[]> {
+    const meetis = await db.query.meeti.findMany({
+      where: {
+        OR: [
+          { title: { ilike: `%${query}%` } },
+          { details: { ilike: `%${query}%` } },
+        ],
+      },
+    });
+
+    return meetis;
+  }
+  async searchVirtual(query?: string): Promise<SelectMeeti[]> {
+    const normalizeQuery = query?.toLowerCase().trim();
+
+    const isToday = normalizeQuery?.includes("hoy");
+
+    let cleanQuery = normalizeQuery;
+
+    if (isToday) {
+      cleanQuery = cleanQuery?.replace("hoy", "").trim();
+    }
+
+    const today = format(new Date(), "yyyy-MM-dd");
+    const meetis = await db.query.meeti.findMany({
+      where: {
+        virtual: { eq: true },
+        ...(isToday && {
+          date: { eq: today },
+        }),
+        ...(cleanQuery &&
+          cleanQuery.length > 0 && {
+            OR: [
+              { title: { ilike: `%${cleanQuery}%` } },
+              { details: { ilike: `%${cleanQuery}%` } },
+            ],
+          }),
+      },
+      limit: 5,
+      orderBy: {
+        date: "asc",
+      },
+    });
+    return meetis;
+  }
+  async searchByLocation(
+    query?: string,
+    city?: string,
+    country?: string,
+    today?: boolean,
+  ): Promise<SelectMeeti[]> {
+    const normalizeQuery = query?.toLowerCase().trim();
+    const isTodayInQuery = normalizeQuery?.includes("hoy");
+    const isToday = today || isTodayInQuery;
+
+    let cleanQuery = normalizeQuery;
+
+    if (isToday) {
+      cleanQuery = cleanQuery?.replace("hoy", "").trim();
+    }
+
+    const todayStr = format(new Date(), "yyyy-MM-dd");
+
+    const meetis = await db.query.meetiLocations.findMany({
+      where: {
+        ...(isToday && { meeti: { date: { eq: todayStr } } }),
+        meeti: { virtual: false },
+        AND: [
+          ...(cleanQuery
+            ? [
+                {
+                  OR: [
+                    { meeti: { title: { ilike: `%${cleanQuery}%` } } },
+                    { meeti: { details: { ilike: `%${cleanQuery}%` } } },
+                  ],
+                },
+              ]
+            : []),
+          ...(country ? [{ country: { ilike: `%${country}%` } }] : []),
+          ...(city ? [{ city: { ilike: `%${city}%` } }] : []),
+        ],
+      },
+      limit: 5,
+      with: { meeti: true },
+    });
+
+    return meetis.map((meeti) => meeti.meeti);
   }
 }
 

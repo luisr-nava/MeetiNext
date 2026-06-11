@@ -155,6 +155,12 @@ class CommunityService {
   async getFeaturedCommunities() {
     return await this.communityRepository.findFeatured();
   }
+
+  async searchCommunityByTopic(query: string) {
+    const community = await this.communityRepository.search(query);
+
+    return community;
+  }
 }
 
 export const communityService = new CommunityService(

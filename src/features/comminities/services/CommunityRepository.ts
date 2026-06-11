@@ -15,6 +15,7 @@ export interface ICommunityRepository {
   upadate(data: CommunityInput, communityId: string): Promise<void>;
   delete(communityId: string): Promise<void>;
   findFeatured(): Promise<CommunityWithMembersCount[]>;
+  search(query: string): Promise<SelectCommunity[]>;
 }
 
 class CommunityRepository implements ICommunityRepository {
@@ -70,6 +71,24 @@ class CommunityRepository implements ICommunityRepository {
       .limit(3);
 
     return result;
+  }
+  async search(query: string): Promise<SelectCommunity[]> {
+    return await db.query.community.findMany({
+      where: {
+        OR: [
+          {
+            name: {
+              ilike: `%${query}%`,
+            },
+          },
+          {
+            description: {
+              ilike: `%${query}%`,
+            },
+          },
+        ],
+      },
+    });
   }
 }
 

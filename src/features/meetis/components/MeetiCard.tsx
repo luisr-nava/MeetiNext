@@ -24,7 +24,7 @@ export default function MeetiCard({ meeti }: Props) {
         <Heading level={3} className="text-2xl font-bold h-16">
           {meeti.title}
         </Heading>
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-5 mt-10">
           <p className="line-clamp-2">{meeti.details}</p>
         </div>
         <Link

@@ -16,6 +16,7 @@ import {
 } from "../schemas/authSchema";
 import toast from "react-hot-toast";
 import { changePasswordAction } from "../actions/auth-actions";
+import { redirect } from "next/navigation";
 
 export default function ChangePasswordForm() {
   const {
@@ -35,6 +36,7 @@ export default function ChangePasswordForm() {
     if (success) {
       toast.success(success);
       reset();
+      redirect("/dashboard/security");
     }
   };
   return (

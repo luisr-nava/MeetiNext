@@ -8,9 +8,10 @@ type Props = {
   community: Omit<SelectCommunity, "createdBy" | "createdAt"> & {
     membersCount?: string;
   };
+  target?: boolean;
 };
 
-export default function CommunityCard({ community }: Props) {
+export default function CommunityCard({ community, target = false }: Props) {
   return (
     <div className="border border-slate-200 bg-white hover:shadow-lg transition-shadow">
       <div className="overflow-hidden">
@@ -35,7 +36,8 @@ export default function CommunityCard({ community }: Props) {
         <p className="line-clamp-2">{community.description}</p>
         <Link
           href={`/communities/${community.id}`}
-          className="bg-orange-500 hover:bg-orange-600 transition-colors text-xl text-white py-3 px-10 mt-10 font-bold block text-center">
+          className="bg-orange-500 hover:bg-orange-600 transition-colors text-xl text-white py-3 px-10 mt-10 font-bold block text-center"
+          target={target ? "_blank" : ""}>
           Ver Comunidad
         </Link>
       </div>
